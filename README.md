@@ -10,7 +10,7 @@
 | **Colaboradores** | Vinicius E. Pini e Pedro H. C. de Oliveira |
 | **Professor(a)** | Diogo T. Barbosa |
 | **Instituição / Curso** | SENAI / Desenvolvimento de Sistemas |
-| **Repositório** | [link do GitHub] |
+| **Repositório** | https://github.com/frxs-dev/Projeto-final |
 
 ---
 
