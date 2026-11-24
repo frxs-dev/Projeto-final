@@ -86,7 +86,13 @@ Pequenas e médias empresas, gestores e empreendedores que precisam de controle 
 
 ---
 
-## 4. Diagrama de entidades e relacionamentos (DER)
+## 4. Prototipagem
+
+link do Stitch: https://stitch.google.com/preview/7060661950315559501?node-id=48141c7098924df69702c7c2e1d2e993
+
+---
+
+## 5. Diagrama de entidades e relacionamentos (DER)
 
 ```mermaid
 erDiagram
