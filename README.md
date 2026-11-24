@@ -14,7 +14,7 @@
 
 ---
 
-## 1. Apresentação e introdução👆
+## 1. Apresentação e introdução
 
 ### 1.1 Problema
 
