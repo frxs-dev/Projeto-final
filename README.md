@@ -178,3 +178,81 @@ erDiagram
 - Itens de equivalência com `empresa_id` nulo formam o **catálogo padrão**; os com `empresa_id` preenchido são **personalizados** da empresa.
 - `CONFIG_EQUIVALENCIA` define qual item é usado para despesas e qual é usado para lucro (RN10).
 - As preferências de acessibilidade ficam no próprio `USUARIO` para simplificar o modelo.
+
+---
+
+## 6. Instruções de Execução & Testes
+
+### Pré-requisitos
+- **Node.js** v18+ (testado em v24.19.0)
+- **NPM** ou gerenciador de pacotes equivalente
+
+### Instalação de dependências
+```bash
+npm install
+```
+
+### Executar em modo desenvolvimento
+```bash
+npm run dev
+```
+O servidor de desenvolvimento iniciará na porta `3000` (ex.: `http://localhost:3000`).
+
+### Executar suíte de testes automatizados (Vitest)
+```bash
+npm test
+```
+A suíte valida os cálculos de equivalência tangível, regras de negócio fiscais do MEI / Simples Nacional, agregação de dados LGPD e métricas do painel financeiro.
+
+### Compilação de Produção
+```bash
+npm run build
+```
+
+---
+
+## 7. Estrutura de Arquivos Implementada
+
+```
+├── .gitignore
+├── index.html                   # HTML base com tipografia e Material Symbols
+├── package.json                 # Dependências e scripts (Vite, React, Vitest, Tailwind)
+├── tailwind.config.js           # Design tokens, paleta titanium e cores acessíveis
+├── tsconfig.json                # Configuração estrita do TypeScript
+├── vite.config.ts               # Bundler Vite configurado
+├── supabase/
+│   └── schema.sql               # Script PostgreSQL com tabelas DER e Row Level Security (RLS)
+└── src/
+    ├── main.tsx                 # Entrada React 18 com AppProvider
+    ├── App.tsx                  # Roteador de telas e layout estrutural
+    ├── index.css                # Estilos globais, temas (Escuro, Claro, Alto Contraste) e WCAG
+    ├── types/
+    │   └── index.ts             # Tipos TypeScript de todas as entidades do DER
+    ├── context/
+    │   └── AppContext.tsx       # Estado global, persistência e alternadores de acessibilidade
+    ├── services/
+    │   ├── storage.ts           # Banco de dados local com seed e cálculo de métricas (RF08)
+    │   ├── equivalenceEngine.ts # Motor de conversão em objetos tangíveis (RF09-RF12)
+    │   ├── aiReportService.ts   # Diagnóstico causal por IA e privacidade LGPD (RF13, RNF04)
+    │   ├── simplesNacionalService.ts # Motor de monitoramento fiscal MEI / ME (Simples Nacional)
+    │   └── exportService.ts     # Exportação de extrato em formato CSV (RF17)
+    ├── components/
+    │   ├── layout/
+    │   │   ├── Header.tsx       # Top bar com dados cadastrais e barra rápida de acessibilidade
+    │   │   └── Sidebar.tsx      # Menu executivo com badges RLS e WCAG 2.1 AA
+    │   ├── common/
+    │   │   └── AccessibleChartTable.tsx # Alternador Gráfico SVG vs Tabela Acessível (RF16)
+    │   └── modals/
+    │       └── NovoLancamentoModal.tsx  # Registro de movimentação em 3 passos rápidos (RNF05)
+    ├── views/
+    │   ├── DashboardView.tsx    # Painel Geral com KPIs e equivalências (RF08, RF12)
+    │   ├── LancamentosView.tsx  # Filtro, pesquisa, extrato e exportação CSV (RF05, RF06, RF07, RF17)
+    │   ├── ContasCategoriasView.tsx # Gestão de contas e categorias (RF03, RF04)
+    │   ├── EquivalenciasView.tsx    # Catálogo e configurador de unidades ativas (RF09, RF10, RF11)
+    │   ├── RelatoriosIAView.tsx # Relatórios comparativos causais e histórico (RF13, RF14, RNF04)
+    │   ├── AcessibilidadeConfigView.tsx # Ergonomia, WCAG e fiscalidade Simples Nacional (RF15)
+    │   └── AuthView.tsx         # Login, criação de empresa e troca de perfil de acesso (RF01, RF02)
+    └── __tests__/
+        └── businessLogic.test.ts # Suíte de testes unitários automatizados
+```
+
