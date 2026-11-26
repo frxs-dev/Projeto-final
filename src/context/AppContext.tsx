@@ -5,6 +5,12 @@ import {
   saveAppState,
   resetAppState,
   calcularMetricas,
+  authenticateAccount,
+  getAuthAccounts,
+  loadAuthSession,
+  registerAccount as createAccount,
+  saveAuthSession,
+  AuthAccount,
 } from '../services/storage';
 import {
   Tema,
@@ -32,6 +38,10 @@ interface AppContextType {
   state: AppState;
   currentView: ViewPath;
   setCurrentView: (v: ViewPath) => void;
+  isAuthenticated: boolean;
+  login: (email: string, senha: string) => boolean;
+  register: (details: Omit<AuthAccount, 'id' | 'empresaId'>) => void;
+  logout: () => void;
   activeExpenseItem: ItemEquivalencia | null;
   activeProfitItem: ItemEquivalencia | null;
   metricas: MetricasFinanceiras;
@@ -62,13 +72,40 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [state, setState] = useState<AppState>(() => loadAppState());
+  const [authenticatedUserId, setAuthenticatedUserId] = useState<string | null>(() => loadAuthSession());
+  const [state, setState] = useState<AppState>(() => {
+    const userId = loadAuthSession();
+    const account = userId ? getAuthAccounts().find((entry) => entry.id === userId) : undefined;
+    return loadAppState(userId || undefined, account);
+  });
   const [currentView, setCurrentView] = useState<ViewPath>('painel-geral');
 
-  // Sincroniza com localStorage sempre que o estado muda
+  // Salva os dados somente no espaço isolado do usuário autenticado.
   useEffect(() => {
-    saveAppState(state);
-  }, [state]);
+    if (authenticatedUserId) saveAppState(state, authenticatedUserId);
+  }, [state, authenticatedUserId]);
+
+  const login = (email: string, senha: string): boolean => {
+    const account = authenticateAccount(email, senha);
+    if (!account) return false;
+    setState(loadAppState(account.id, account));
+    saveAuthSession(account.id);
+    setAuthenticatedUserId(account.id);
+    setCurrentView('painel-geral');
+    return true;
+  };
+
+  const register = (details: Omit<AuthAccount, 'id' | 'empresaId'>): void => {
+    const account = createAccount(details);
+    loadAppState(account.id, account);
+  };
+
+  const logout = () => {
+    saveAuthSession(null);
+    setAuthenticatedUserId(null);
+    setState(loadAppState());
+    setCurrentView('painel-geral');
+  };
 
   // Aplica classes de acessibilidade no elemento <html> (RF15, RNF01)
   useEffect(() => {
@@ -289,7 +326,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const resetDatabase = () => {
-    const reset = resetAppState();
+    const account = authenticatedUserId
+      ? getAuthAccounts().find((entry) => entry.id === authenticatedUserId)
+      : undefined;
+    const reset = resetAppState(authenticatedUserId || undefined, account);
     setState(reset);
   };
 
@@ -299,6 +339,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         state,
         currentView,
         setCurrentView,
+        isAuthenticated: authenticatedUserId !== null,
+        login,
+        register,
+        logout,
         activeExpenseItem,
         activeProfitItem,
         metricas,

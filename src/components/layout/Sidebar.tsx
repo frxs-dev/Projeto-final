@@ -2,7 +2,7 @@ import React from 'react';
 import { useApp, ViewPath } from '../../context/AppContext';
 
 export const Sidebar: React.FC = () => {
-  const { currentView, setCurrentView } = useApp();
+  const { currentView, setCurrentView, logout } = useApp();
 
   const navItems: { path: ViewPath; label: string; icon: string }[] = [
     { path: 'painel-geral', label: 'Painel Geral', icon: 'dashboard' },
@@ -106,22 +106,17 @@ export const Sidebar: React.FC = () => {
           </span>
         </div>
 
-        {/* Switch to Login / Register View (RF01) */}
         <div className="pt-1">
           <button
             type="button"
-            onClick={() => setCurrentView('login-e-registro')}
-            className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-primary ${
-              currentView === 'login-e-registro'
-                ? 'bg-primary-container text-on-primary-container font-semibold'
-                : 'bg-surface-container text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface'
-            }`}
+            onClick={logout}
+            className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-colors cursor-pointer focus-visible:ring-2 focus-visible:ring-primary bg-surface-container text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface"
           >
             <span className="flex items-center gap-2">
               <span className="material-symbols-outlined text-[18px]" aria-hidden="true">
                 logout
               </span>
-              <span>Trocar Acesso</span>
+              <span>Sair da conta</span>
             </span>
             <span className="material-symbols-outlined text-[16px]" aria-hidden="true">
               chevron_right

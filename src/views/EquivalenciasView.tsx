@@ -89,7 +89,7 @@ export const EquivalenciasView: React.FC = () => {
             <span className="material-symbols-outlined text-[18px]" aria-hidden="true">
               add_circle
             </span>
-            <span>+ Cadastrar Item Próprio da Empresa (RF11)</span>
+            <span>Cadastrar Item Próprio da Empresa (RF11)</span>
           </button>
         </div>
       </section>

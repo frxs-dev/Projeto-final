@@ -115,7 +115,7 @@ export const RelatoriosIAView: React.FC = () => {
             <span className="material-symbols-outlined text-[18px]" aria-hidden="true">
               auto_awesome
             </span>
-            <span>+ Gerar Novo Relatório Comparativo</span>
+            <span>Gerar Novo Relatório Comparativo</span>
           </button>
         </div>
       </section>

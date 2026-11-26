@@ -139,7 +139,7 @@ export const LancamentosView: React.FC = () => {
             <span className="material-symbols-outlined text-[18px]" aria-hidden="true">
               arrow_upward
             </span>
-            <span>+ Nova Despesa</span>
+            <span>Nova Despesa</span>
           </button>
 
           <button
@@ -150,7 +150,7 @@ export const LancamentosView: React.FC = () => {
             <span className="material-symbols-outlined text-[18px]" aria-hidden="true">
               arrow_downward
             </span>
-            <span>+ Nova Receita</span>
+            <span>Nova Receita</span>
           </button>
         </div>
       </section>

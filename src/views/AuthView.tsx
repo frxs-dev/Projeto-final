@@ -1,47 +1,58 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { PapelUsuario, RegimeTributario } from '../types';
+import { RegimeTributario } from '../types';
 
 export const AuthView: React.FC = () => {
-  const {
-    state,
-    setCurrentView,
-    switchUsuarioPapel,
-    updateEmpresa,
-  } = useApp();
-
+  const { login, register } = useApp();
   const [modo, setModo] = useState<'login' | 'registro'>('login');
-  const [email, setEmail] = useState('filipe.reis@techcorp.com.br');
-  const [senha, setSenha] = useState('••••••••');
-  const [nome, setNome] = useState('Filipe A. Reis');
-  const [nomeEmpresa, setNomeEmpresa] = useState('TechCorp Soluções Ltda');
-  const [cnpj, setCnpj] = useState('12.345.678/0001-90');
+  const [email, setEmail] = useState('');
+  const [senha, setSenha] = useState('');
+  const [nome, setNome] = useState('');
+  const [nomeEmpresa, setNomeEmpresa] = useState('');
+  const [cnpj, setCnpj] = useState('');
   const [regime, setRegime] = useState<RegimeTributario>('SIMPLES_NACIONAL');
   const [mensagem, setMensagem] = useState('');
+  const [cadastroConcluido, setCadastroConcluido] = useState(false);
 
   const handleAutenticar = (e: React.FormEvent) => {
     e.preventDefault();
+    setMensagem('');
+    setCadastroConcluido(false);
 
     if (modo === 'registro') {
-      updateEmpresa({
-        nome: nomeEmpresa,
-        cnpj,
-        regimeTributario: regime,
-      });
-      setMensagem('Conta e empresa criadas com sucesso! Você agora é o Administrador (RF02).');
-    } else {
-      setMensagem('Sessão autenticada via Supabase Auth (RF01)!');
+      try {
+        register({
+          email,
+          senha,
+          nome,
+          nomeEmpresa,
+          cnpj,
+          regimeTributario: regime,
+        });
+        setModo('login');
+        setSenha('');
+        setCadastroConcluido(true);
+        setMensagem('Conta criada. Entre com seu e-mail e senha para continuar.');
+      } catch (error) {
+        setMensagem(error instanceof Error ? error.message : 'Não foi possível criar a conta.');
+      }
+      return;
     }
 
-    setTimeout(() => {
-      setCurrentView('painel-geral');
-    }, 1200);
+    if (!login(email, senha)) {
+      setMensagem('E-mail ou senha incorretos.');
+    }
+  };
+
+  const trocarModo = (novoModo: 'login' | 'registro') => {
+    setModo(novoModo);
+    setMensagem('');
+    setCadastroConcluido(false);
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[80vh] px-4 py-12">
+    <div className="flex flex-col items-center justify-center min-h-screen px-4 py-12">
       <div className="w-full max-w-md bg-surface-container-low rounded-2xl p-8 border border-surface-container-high shadow-xl flex flex-col gap-6">
-        {/* Brand */}
         <div className="flex flex-col items-center text-center gap-2">
           <div className="w-12 h-12 rounded-xl bg-primary-container text-on-primary-container flex items-center justify-center shadow-md">
             <span className="material-symbols-outlined text-[28px]" aria-hidden="true">
@@ -53,40 +64,48 @@ export const AuthView: React.FC = () => {
           </h1>
           <p className="text-xs text-on-surface-variant">
             {modo === 'login'
-              ? 'Acesse a gestão financeira tangível da sua empresa'
-              : 'Cadastre sua empresa e comece como Administrador (RF01, RF02)'}
+              ? 'Entre na sua conta para acessar a gestão financeira.'
+              : 'Cadastre sua empresa para começar a usar o Finance.'}
           </p>
         </div>
 
         {mensagem && (
-          <div className="p-3 rounded-lg bg-primary/10 border border-primary text-primary text-xs font-semibold text-center" role="status">
+          <div
+            className={`p-3 rounded-lg text-xs font-semibold text-center ${
+              cadastroConcluido
+                ? 'bg-primary/10 border border-primary text-primary'
+                : 'bg-error/10 border border-error text-error'
+            }`}
+            role={cadastroConcluido ? 'status' : 'alert'}
+          >
             {mensagem}
           </div>
         )}
 
-        {/* Tab Switcher */}
         <div className="flex rounded-lg bg-surface-container-lowest p-1 border border-surface-container-high/60">
           <button
             type="button"
-            onClick={() => setModo('login')}
+            onClick={() => trocarModo('login')}
+            aria-pressed={modo === 'login'}
             className={`flex-1 py-1.5 text-xs font-semibold rounded-md transition-colors cursor-pointer ${
               modo === 'login'
                 ? 'bg-surface-container text-primary font-bold shadow-sm'
                 : 'text-on-surface-variant hover:text-on-surface'
             }`}
           >
-            Já tenho acesso (RF01)
+            Já tenho conta
           </button>
           <button
             type="button"
-            onClick={() => setModo('registro')}
+            onClick={() => trocarModo('registro')}
+            aria-pressed={modo === 'registro'}
             className={`flex-1 py-1.5 text-xs font-semibold rounded-md transition-colors cursor-pointer ${
               modo === 'registro'
                 ? 'bg-surface-container text-primary font-bold shadow-sm'
                 : 'text-on-surface-variant hover:text-on-surface'
             }`}
           >
-            Cadastrar Empresa (RF02)
+            Criar conta
           </button>
         </div>
 
@@ -94,23 +113,26 @@ export const AuthView: React.FC = () => {
           {modo === 'registro' && (
             <>
               <div>
-                <label className="block text-xs font-medium text-on-surface-variant mb-1">
-                  Seu Nome Completo *
+                <label htmlFor="nome" className="block text-xs font-medium text-on-surface-variant mb-1">
+                  Seu nome completo *
                 </label>
                 <input
+                  id="nome"
                   type="text"
                   value={nome}
                   onChange={(e) => setNome(e.target.value)}
                   required
+                  autoComplete="name"
                   className="w-full px-3 py-2 bg-surface-container-lowest rounded-xl border border-surface-container-high text-on-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-on-surface-variant mb-1">
-                  Razão Social da Empresa *
+                <label htmlFor="empresa" className="block text-xs font-medium text-on-surface-variant mb-1">
+                  Razão social da empresa *
                 </label>
                 <input
+                  id="empresa"
                   type="text"
                   value={nomeEmpresa}
                   onChange={(e) => setNomeEmpresa(e.target.value)}
@@ -121,10 +143,11 @@ export const AuthView: React.FC = () => {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-medium text-on-surface-variant mb-1">
+                  <label htmlFor="cnpj" className="block text-xs font-medium text-on-surface-variant mb-1">
                     CNPJ *
                   </label>
                   <input
+                    id="cnpj"
                     type="text"
                     value={cnpj}
                     onChange={(e) => setCnpj(e.target.value)}
@@ -133,16 +156,18 @@ export const AuthView: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-on-surface-variant mb-1">
-                    Regime Fiscal *
+                  <label htmlFor="regime" className="block text-xs font-medium text-on-surface-variant mb-1">
+                    Regime fiscal *
                   </label>
                   <select
+                    id="regime"
                     value={regime}
                     onChange={(e) => setRegime(e.target.value as RegimeTributario)}
                     className="w-full px-3 py-2 bg-surface-container-lowest rounded-xl border border-surface-container-high text-on-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                   >
                     <option value="SIMPLES_NACIONAL">Simples Nacional</option>
                     <option value="MEI">MEI</option>
+                    <option value="LUCRO_PRESUMIDO">Lucro Presumido</option>
                   </select>
                 </div>
               </div>
@@ -150,27 +175,32 @@ export const AuthView: React.FC = () => {
           )}
 
           <div>
-            <label className="block text-xs font-medium text-on-surface-variant mb-1">
-              E-mail Corporativo *
+            <label htmlFor="email" className="block text-xs font-medium text-on-surface-variant mb-1">
+              E-mail *
             </label>
             <input
+              id="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
+              autoComplete="email"
               className="w-full px-3 py-2 bg-surface-container-lowest rounded-xl border border-surface-container-high text-on-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-on-surface-variant mb-1">
-              Senha de Acesso *
+            <label htmlFor="senha" className="block text-xs font-medium text-on-surface-variant mb-1">
+              Senha *
             </label>
             <input
+              id="senha"
               type="password"
               value={senha}
               onChange={(e) => setSenha(e.target.value)}
               required
+              minLength={6}
+              autoComplete={modo === 'login' ? 'current-password' : 'new-password'}
               className="w-full px-3 py-2 bg-surface-container-lowest rounded-xl border border-surface-container-high text-on-surface font-mono text-sm focus:outline-none focus:ring-2 focus:ring-primary"
             />
           </div>
@@ -179,35 +209,16 @@ export const AuthView: React.FC = () => {
             type="submit"
             className="w-full py-2.5 rounded-xl bg-primary-container text-on-primary-container font-bold text-sm hover:bg-primary transition-all shadow-md active:scale-98 cursor-pointer mt-2"
           >
-            {modo === 'login' ? 'Entrar no Sistema' : 'Concluir Cadastro & Iniciar'}
+            {modo === 'login' ? 'Entrar no sistema' : 'Concluir cadastro'}
           </button>
         </form>
 
-        {/* Quick Demo Role Switcher for Evaluators / Teachers */}
-        <div className="pt-4 border-t border-surface-container-high flex flex-col gap-2">
-          <span className="text-[11px] font-mono uppercase font-bold text-on-surface-variant text-center">
-            Alternar Perfil Instantaneamente (Para Testes)
-          </span>
-          <div className="grid grid-cols-3 gap-2">
-            {(['ADMIN', 'FINANCEIRO', 'LEITOR'] as PapelUsuario[]).map((papel) => (
-              <button
-                key={papel}
-                type="button"
-                onClick={() => {
-                  switchUsuarioPapel(papel);
-                  setCurrentView('painel-geral');
-                }}
-                className={`py-1.5 px-2 rounded-lg text-[11px] font-mono font-bold border transition-colors cursor-pointer ${
-                  state.usuario.papel === papel
-                    ? 'bg-primary/20 text-primary border-primary'
-                    : 'bg-surface-container text-on-surface-variant border-surface-container-high hover:text-on-surface'
-                }`}
-              >
-                {papel}
-              </button>
-            ))}
-          </div>
-        </div>
+        {modo === 'login' && (
+          <p className="text-center text-xs text-on-surface-variant">
+            Acesso de demonstração: <span className="font-mono">filipe@gmail.com</span> /{' '}
+            <span className="font-mono">123456</span>
+          </p>
+        )}
       </div>
     </div>
   );

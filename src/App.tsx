@@ -11,7 +11,15 @@ import { AcessibilidadeConfigView } from './views/AcessibilidadeConfigView';
 import { AuthView } from './views/AuthView';
 
 export const AppContent: React.FC = () => {
-  const { currentView } = useApp();
+  const { currentView, isAuthenticated } = useApp();
+
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-background text-on-surface">
+        <AuthView />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background text-on-surface flex flex-col">

@@ -11,6 +11,20 @@ import {
 } from '../types';
 
 const STORAGE_KEY = 'finance_tangivel_v1_store';
+const AUTH_ACCOUNTS_KEY = 'finance_tangivel_v1_accounts';
+const AUTH_SESSION_KEY = 'finance_tangivel_v1_session';
+const DEMO_USER_ID = 'usr_001';
+
+export interface AuthAccount {
+  id: string;
+  empresaId: string;
+  nome: string;
+  email: string;
+  senha: string;
+  nomeEmpresa: string;
+  cnpj: string;
+  regimeTributario: Empresa['regimeTributario'];
+}
 
 export interface AppState {
   empresa: Empresa;
@@ -37,7 +51,7 @@ export const SEED_DATA: AppState = {
     id: 'usr_001',
     empresaId: 'emp_001',
     nome: 'Filipe A. Reis',
-    email: 'filipe.reis@techcorp.com.br',
+    email: 'filipe@gmail.com',
     papel: 'ADMIN',
     tamanhoFonte: 100,
     tema: 'ESCURO',
@@ -401,29 +415,46 @@ export const SEED_DATA: AppState = {
 };
 
 /**
- * Carrega o estado do localStorage com fallback seguro para os dados seed
+ * Carrega o estado salvo para a conta; os dados de demonstração pertencem apenas ao usuário seed.
  */
-export function loadAppState(): AppState {
+export function loadAppState(userId?: string, account?: AuthAccount): AppState {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) {
-      saveAppState(SEED_DATA);
-      return SEED_DATA;
+    if (!userId) {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return SEED_DATA;
+      return { ...SEED_DATA, ...JSON.parse(raw) };
     }
-    const parsed = JSON.parse(raw);
-    return { ...SEED_DATA, ...parsed };
+
+    const userStorageKey = `${STORAGE_KEY}_${userId}`;
+    const raw = localStorage.getItem(userStorageKey);
+    if (raw) return { ...SEED_DATA, ...JSON.parse(raw) };
+
+    if (userId === DEMO_USER_ID) {
+      const legacyState = localStorage.getItem(STORAGE_KEY);
+      const demoState = legacyState
+        ? { ...SEED_DATA, ...JSON.parse(legacyState) }
+        : SEED_DATA;
+      demoState.usuario = { ...demoState.usuario, id: DEMO_USER_ID, email: 'filipe@gmail.com' };
+      saveAppState(demoState, userId);
+      return demoState;
+    }
+
+    const initialState = createEmptyAppState(account);
+    saveAppState(initialState, userId);
+    return initialState;
   } catch (err) {
-    console.error('Falha ao ler localStorage, utilizando semente padrão:', err);
-    return SEED_DATA;
+    console.error('Falha ao ler estado do localStorage:', err);
+    return account ? createEmptyAppState(account) : SEED_DATA;
   }
 }
 
 /**
- * Salva o estado completo no localStorage
+ * Salva o estado completo no armazenamento isolado da conta.
  */
-export function saveAppState(state: AppState): void {
+export function saveAppState(state: AppState, userId?: string): void {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    const key = userId ? `${STORAGE_KEY}_${userId}` : STORAGE_KEY;
+    localStorage.setItem(key, JSON.stringify(state));
   } catch (err) {
     console.error('Falha ao salvar no localStorage:', err);
   }
@@ -432,10 +463,108 @@ export function saveAppState(state: AppState): void {
 /**
  * Reseta o banco de dados local para o padrão de demonstração
  */
-export function resetAppState(): AppState {
-  localStorage.removeItem(STORAGE_KEY);
-  saveAppState(SEED_DATA);
-  return SEED_DATA;
+export function resetAppState(userId?: string, account?: AuthAccount): AppState {
+  const key = userId ? `${STORAGE_KEY}_${userId}` : STORAGE_KEY;
+  localStorage.removeItem(key);
+  const reset = userId === DEMO_USER_ID ? loadAppState(userId) : createEmptyAppState(account);
+  saveAppState(reset, userId);
+  return reset;
+}
+
+function createEmptyAppState(account?: AuthAccount): AppState {
+  if (!account) return SEED_DATA;
+  const empresa: Empresa = {
+    id: account.empresaId,
+    nome: account.nomeEmpresa,
+    cnpj: account.cnpj,
+    regimeTributario: account.regimeTributario,
+    criadoEm: new Date().toISOString(),
+  };
+  const usuario: Usuario = {
+    id: account.id,
+    empresaId: account.empresaId,
+    nome: account.nome,
+    email: account.email,
+    papel: 'ADMIN',
+    tamanhoFonte: 100,
+    tema: 'ESCURO',
+    reduzirAnimacoes: false,
+  };
+  return {
+    empresa,
+    usuario,
+    contas: [],
+    categorias: [],
+    lancamentos: [],
+    itensEquivalencia: SEED_DATA.itensEquivalencia.filter((item) => item.empresaId === null),
+    configsEquivalencia: [],
+    relatorios: [],
+    metaLucroUnidades: 0,
+  };
+}
+
+export function getAuthAccounts(): AuthAccount[] {
+  const demoAccount: AuthAccount = {
+    id: DEMO_USER_ID,
+    empresaId: 'emp_001',
+    nome: 'Filipe A. Reis',
+    email: 'filipe@gmail.com',
+    senha: '123456',
+    nomeEmpresa: SEED_DATA.empresa.nome,
+    cnpj: SEED_DATA.empresa.cnpj,
+    regimeTributario: SEED_DATA.empresa.regimeTributario,
+  };
+  try {
+    const stored = localStorage.getItem(AUTH_ACCOUNTS_KEY);
+    const accounts: AuthAccount[] = stored ? JSON.parse(stored) : [];
+    return [demoAccount, ...accounts.filter((account) => account.id !== DEMO_USER_ID)];
+  } catch (err) {
+    console.error('Falha ao ler contas cadastradas:', err);
+    return [demoAccount];
+  }
+}
+
+export function authenticateAccount(email: string, senha: string): AuthAccount | null {
+  const normalizedEmail = email.trim().toLowerCase();
+  return getAuthAccounts().find(
+    (account) => account.email.toLowerCase() === normalizedEmail && account.senha === senha
+  ) || null;
+}
+
+export function registerAccount(
+  details: Omit<AuthAccount, 'id' | 'empresaId'>
+): AuthAccount {
+  const accounts = getAuthAccounts();
+  if (accounts.some((account) => account.email.toLowerCase() === details.email.trim().toLowerCase())) {
+    throw new Error('Este e-mail já possui uma conta. Faça login ou use outro e-mail.');
+  }
+
+  const id = `usr_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+  const account: AuthAccount = {
+    ...details,
+    id,
+    empresaId: `emp_${id}`,
+    email: details.email.trim().toLowerCase(),
+  };
+  const registeredAccounts = accounts.filter((entry) => entry.id !== DEMO_USER_ID);
+  registeredAccounts.push(account);
+  localStorage.setItem(AUTH_ACCOUNTS_KEY, JSON.stringify(registeredAccounts));
+  return account;
+}
+
+export function loadAuthSession(): string | null {
+  try {
+    const userId = localStorage.getItem(AUTH_SESSION_KEY);
+    return userId && getAuthAccounts().some((account) => account.id === userId) ? userId : null;
+  } catch (err) {
+    console.error('Falha ao ler sessão de autenticação:', err);
+    return null;
+  }
+}
+
+export function saveAuthSession(userId: string | null): void {
+  if (userId) localStorage.setItem(AUTH_SESSION_KEY, userId);
+  else localStorage.removeItem(AUTH_SESSION_KEY);
 }
 
 /**

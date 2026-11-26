@@ -95,7 +95,7 @@ export const ContasCategoriasView: React.FC = () => {
             <span className="material-symbols-outlined text-[18px]" aria-hidden="true">
               add_circle
             </span>
-            <span>+ Nova Conta (RF03)</span>
+            <span>Nova Conta (RF03)</span>
           </button>
 
           <button
@@ -106,7 +106,7 @@ export const ContasCategoriasView: React.FC = () => {
             <span className="material-symbols-outlined text-[18px]" aria-hidden="true">
               category
             </span>
-            <span>+ Nova Categoria (RF04)</span>
+            <span>Nova Categoria (RF04)</span>
           </button>
         </div>
       </section>

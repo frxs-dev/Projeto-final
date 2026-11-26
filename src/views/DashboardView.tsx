@@ -97,7 +97,7 @@ export const DashboardView: React.FC = () => {
             <span className="material-symbols-outlined text-[20px]" aria-hidden="true">
               add_circle
             </span>
-            <span>+ Novo Lançamento</span>
+            <span>Novo Lançamento</span>
             <span className="text-on-primary-container/80 font-normal text-xs hidden xl:inline">
               (3 passos rápidos)
             </span>
@@ -436,11 +436,10 @@ export const DashboardView: React.FC = () => {
                     </td>
                     <td className="py-3 px-3 whitespace-nowrap">
                       <span
-                        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full font-mono text-[11px] font-semibold ${
-                          item.tipo === 'RECEITA'
+                        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full font-mono text-[11px] font-semibold ${item.tipo === 'RECEITA'
                             ? 'bg-primary/10 text-primary'
                             : 'bg-error/10 text-error'
-                        }`}
+                          }`}
                       >
                         <span className="material-symbols-outlined text-[12px]" aria-hidden="true">
                           {item.tipo === 'RECEITA' ? 'arrow_downward' : 'arrow_upward'}
@@ -460,9 +459,8 @@ export const DashboardView: React.FC = () => {
                       {contaNome}
                     </td>
                     <td
-                      className={`py-3 px-3 text-right font-mono font-bold whitespace-nowrap ${
-                        item.tipo === 'RECEITA' ? 'text-primary' : 'text-error'
-                      }`}
+                      className={`py-3 px-3 text-right font-mono font-bold whitespace-nowrap ${item.tipo === 'RECEITA' ? 'text-primary' : 'text-error'
+                        }`}
                     >
                       {item.tipo === 'RECEITA' ? '+' : '-'} {formatCurrency(item.valor)}
                     </td>

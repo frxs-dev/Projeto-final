@@ -174,7 +174,7 @@ export const NovoLancamentoModal: React.FC<NovoLancamentoModalProps> = ({
                   <span className="material-symbols-outlined text-[18px]" aria-hidden="true">
                     arrow_downward
                   </span>
-                  <span>+ Receita (Entrada)</span>
+                  <span>Receita (Entrada)</span>
                 </button>
 
                 <button
@@ -195,7 +195,7 @@ export const NovoLancamentoModal: React.FC<NovoLancamentoModalProps> = ({
                   <span className="material-symbols-outlined text-[18px]" aria-hidden="true">
                     arrow_upward
                   </span>
-                  <span>- Despesa (Saída)</span>
+                  <span>Despesa (Saída)</span>
                 </button>
               </div>
 
